@@ -24,6 +24,8 @@ object Dependencies {
   lazy val scalaCompiler = Def.setting { "org.scala-lang" % "scala-compiler" % scalaVersion.value }
   lazy val scalaReflect = Def.setting { "org.scala-lang" % "scala-reflect" % scalaVersion.value }
 
+  lazy val dotty = "org.scala-lang" %% "dotty" % "0.1-SNAPSHOT"
+
   lazy val sbinary = "org.scala-tools.sbinary" %% "sbinary" % "0.4.2"
   lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.4"
   lazy val scalatest = "org.scalatest" %% "scalatest" % "2.2.4"

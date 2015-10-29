@@ -70,7 +70,8 @@ object ScalaInstance {
     val loader = classLoader(all.toList)
     val library = libraryJar(scalaHome)
     val version = actualVersion(loader)(" (library jar  " + library.getAbsolutePath + ")")
-    new ScalaInstance(version, loader, library, compilerJar(scalaHome), all.toArray, None)
+    val isDotty = version == "0.1"
+    new ScalaInstance(version, loader, library, compilerJar(scalaHome, isDotty), all.toArray, None)
   }
 
   def apply(version: String, scalaHome: File, launcher: xsbti.Launcher): ScalaInstance =
@@ -89,19 +90,32 @@ object ScalaInstance {
   private[this] def scalaLib(scalaHome: File): File = new File(scalaHome, "lib")
   private[this] val blacklist: Set[String] = Set("scala-actors.jar", "scalacheck.jar", "scala-partest.jar", "scala-partest-javaagent.jar", "scalap.jar", "scala-swing.jar")
 
-  private def compilerJar(scalaHome: File) = scalaJar(scalaHome, "scala-compiler.jar")
+  private def compilerJar(scalaHome: File, isDotty: Boolean = false) =
+    scalaJar(scalaHome, if (isDotty) "dotty_2.11.jar" else "scala-compiler.jar")
   private def libraryJar(scalaHome: File) = scalaJar(scalaHome, "scala-library.jar")
 
   def scalaJar(scalaHome: File, name: String) = new File(scalaLib(scalaHome), name)
 
   /** Gets the version of Scala in the compiler.properties file from the loader.*/
-  private def actualVersion(scalaLoader: ClassLoader)(label: String) =
-    try fastActualVersion(scalaLoader)
-    catch { case e: Exception => slowActualVersion(scalaLoader)(label) }
+  private def actualVersion(scalaLoader: ClassLoader)(label: String) = {
+    // try fastActualVersion(scalaLoader)
+    // catch { case e: Exception => slowActualVersion(scalaLoader)(label) }
+    slowActualVersion(scalaLoader)(label)
+  }
   private def slowActualVersion(scalaLoader: ClassLoader)(label: String) =
     {
-      val v = try { Class.forName("scala.tools.nsc.Properties", true, scalaLoader).getMethod("versionString").invoke(null).toString }
-      catch { case cause: Exception => throw new InvalidScalaInstance("Scala instance doesn't exist or is invalid: " + label, cause) }
+      val v = try {
+        Class.forName("dotty.tools.dotc.Main", false, scalaLoader)
+        "0.1"
+      } catch {
+        case _: Exception =>
+          try {
+            Class.forName("scala.tools.nsc.Properties", true, scalaLoader).getMethod("versionString").invoke(null).toString
+          } catch {
+            case cause: Exception =>
+              throw new InvalidScalaInstance("Scala instance doesn't exist or is invalid: " + label, cause)
+          }
+      }
       if (v.startsWith(VersionPrefix)) v.substring(VersionPrefix.length) else v
     }
   private def fastActualVersion(scalaLoader: ClassLoader): String =

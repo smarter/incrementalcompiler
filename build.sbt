@@ -3,12 +3,13 @@ import Util._
 import Dependencies._
 // import StringUtilities.normalize
 
-def baseVersion = "0.1.0-M1"
+def baseVersion = "0.1.0-M1-dotty1"
 def internalPath   = file("internal")
 
 def commonSettings: Seq[Setting[_]] = Seq(
+  version := "0.1.0-M1-dotty1",
   scalaVersion := "2.11.7",
-  // publishArtifact in packageDoc := false,
+  publishArtifact in packageDoc := false,
   resolvers += Resolver.typesafeIvyRepo("releases"),
   resolvers += Resolver.sonatypeRepo("snapshots"),
   resolvers += Resolver.bintrayRepo("sbt", "maven-releases"),
@@ -66,8 +67,11 @@ lazy val incrementalcompilerRoot: Project = (project in file(".")).
     inThisBuild(Seq(
       git.baseVersion := baseVersion,
       bintrayPackage := "incrementalcompiler",
-      scmInfo := Some(ScmInfo(url("https://github.com/sbt/incrementalcompiler"), "git@github.com:sbt/incrementalcompiler.git")),
-      description := "Incremental compiler of Scala"
+      scmInfo := Some(ScmInfo(url("https://github.com/sbt/incrementalcompiler"), "git@github.com:smarter/incrementalcompiler.git")),
+      description := "Incremental compiler of Scala",
+      bintrayReleaseOnPublish := true,
+      bintrayOrganization := None,
+      bintrayRepository := "maven"
     )),
     minimalSettings,
     name := "Incrementalcompiler Root",
@@ -170,7 +174,12 @@ lazy val compilerBridge = (project in internalPath / "compiler-bridge").
     // needed because we fork tests and tests are ran in parallel so we have multiple Scala
     // compiler instances that are memory hungry
     javaOptions in Test += "-Xmx1G",
-    libraryDependencies ++= Seq(sbtIO, utilLogging),
+    libraryDependencies ++= {
+      scalaVersion.value match {
+        case v if v startsWith "2.11" => Seq(sbtIO, utilLogging, dotty)
+        case _                        => Seq(sbtIO, utilLogging)
+      }
+    },
     scalaSource in Compile := {
       scalaVersion.value match {
         case v if v startsWith "2.11" => baseDirectory.value / "src" / "main" / "scala"

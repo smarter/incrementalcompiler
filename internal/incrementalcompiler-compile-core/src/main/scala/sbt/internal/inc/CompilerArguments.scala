@@ -31,7 +31,7 @@ final class CompilerArguments(scalaInstance: xsbti.compile.ScalaInstance, cp: xs
       options ++ outputOption ++ bootClasspathOption(hasLibrary(classpath)) ++ classpathOption ++ abs(sources)
     }
   def finishClasspath(classpath: Seq[File]): Seq[File] =
-    filterLibrary(classpath) ++ include(cp.compiler, scalaInstance.compilerJar) ++ include(cp.extra, scalaInstance.otherJars: _*)
+    filterLibrary(classpath) ++ Seq(scalaInstance.compilerJar) ++ scalaInstance.otherJars
   private[this] def include(flag: Boolean, jars: File*) = if (flag) jars else Nil
   private[this] def abs(files: Seq[File]) = files.map(_.getAbsolutePath).sortWith(_ < _)
   private[this] def checkScalaHomeUnset(): Unit = {

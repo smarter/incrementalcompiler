@@ -22,11 +22,21 @@ class RawCompiler(val scalaInstance: xsbti.compile.ScalaInstance, cp: ClasspathO
     import scala.tools.nsc.Main.{ process => _ }
 
     val arguments = compilerArguments(sources, classpath, Some(outputDirectory), options)
-    log.debug("Plain interface to Scala compiler " + scalaInstance.actualVersion + "  with arguments: " + arguments.mkString("\n\t", "\n\t", ""))
-    val mainClass = Class.forName("scala.tools.nsc.Main", true, scalaInstance.loader)
-    val process = mainClass.getMethod("process", classOf[Array[String]])
-    process.invoke(null, arguments.toArray)
-    checkForFailure(mainClass, arguments.toArray)
+    val args = arguments.toArray
+    if (scalaInstance.actualVersion == "0.1") {
+      log.debug("Plain interface to Dotty compiler " + scalaInstance.actualVersion + "  with arguments: " + arguments.mkString("\n\t", "\n\t", ""))
+      val mainClass = Class.forName("dotty.tools.dotc.Main", true, scalaInstance.loader)
+      val process = mainClass.getMethod("process", classOf[Array[String]])
+      val reporter = process.invoke(null, args)
+      val failed = reporter.getClass.getMethod("hasErrors").invoke(reporter).asInstanceOf[Boolean]
+      if (failed) throw new CompileFailed(args, "Plain compile failed", Array())
+    } else {
+      log.debug("Plain interface to Scala compiler " + scalaInstance.actualVersion + "  with arguments: " + arguments.mkString("\n\t", "\n\t", ""))
+      val mainClass = Class.forName("scala.tools.nsc.Main", true, scalaInstance.loader)
+      val process = mainClass.getMethod("process", classOf[Array[String]])
+      process.invoke(null, args)
+      checkForFailure(mainClass, args)
+    }
   }
   def compilerArguments = new CompilerArguments(scalaInstance, cp)
   protected def checkForFailure(mainClass: Class[_], args: Array[String]): Unit = {
