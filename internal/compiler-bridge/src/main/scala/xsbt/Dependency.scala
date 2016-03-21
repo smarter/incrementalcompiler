@@ -210,11 +210,17 @@ final class Dependency(val global: CallbackGlobal) extends LocateClassFile with 
        *    this looks fishy, see this thread:
        *    https://groups.google.com/d/topic/scala-internals/Ms9WUAtokLo/discussion
        */
-      case id: Ident => addDependency(id.symbol)
+      case id: Ident =>
+        addDependency(id.symbol)
+        symbolsInType(id.tpe).foreach(addDependency)
       case sel @ Select(qual, _) =>
-        traverse(qual); addDependency(sel.symbol)
+        traverse(qual)
+        addDependency(sel.symbol)
+        symbolsInType(sel.tpe).foreach(addDependency)
       case sel @ SelectFromTypeTree(qual, _) =>
-        traverse(qual); addDependency(sel.symbol)
+        traverse(qual)
+        addDependency(sel.symbol)
+        symbolsInType(sel.tpe).foreach(addDependency)
 
       case Template(parents, self, body) =>
         // use typeSymbol to dealias type aliases -- we want to track the dependency on the real class in the alias's RHS
