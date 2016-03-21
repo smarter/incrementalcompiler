@@ -47,7 +47,7 @@ class ExtractUsedNamesSpecification extends UnitSpec {
                   |}""".stripMargin
     val compilerForTesting = new ScalaCompilerForUnitTesting(nameHashing = true)
     val usedNames = compilerForTesting.extractUsedNamesFromSrc(srcA, srcB)
-    val expectedNames = standardNames ++ Set("A", "a", "B", "=")
+    val expectedNames = standardNames ++ Set("A", "a", "B", "=", "Int")
     assert(usedNames("B") === expectedNames)
   }
 
@@ -88,10 +88,13 @@ class ExtractUsedNamesSpecification extends UnitSpec {
    * definition.
    */
   private val standardNames = Set(
-    // AnyRef is added as default parent of a class
-    "scala", "AnyRef",
+    "scala",
+    // The default parent of a class is "AnyRef" which is an alias for "Object"
+    "AnyRef", "Object",
     // class receives a default constructor which is internally called "<init>"
-    "<init>"
+    "<init>",
+    // TODO: figure out if we can avoid getting this name
+    "<none>"
   )
 
 }

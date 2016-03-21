@@ -137,6 +137,8 @@ class ExtractUsedNames[GlobalType <: CallbackGlobal](val global: GlobalType) ext
         t.original.foreach(traverse)
       case t if t.hasSymbol && eligibleAsUsedName(t.symbol) =>
         addSymbol(t.symbol)
+        if (t.tpe != null && t.tpe != NoType)
+          addSymbol(t.tpe.typeSymbol)
       case _ =>
     }
 
