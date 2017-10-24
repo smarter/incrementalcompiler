@@ -75,6 +75,7 @@ object Scripted {
                  bufferLog: Boolean,
                  prescripted: File => Unit): Unit = {
     System.err.println(s"About to run tests: ${args.mkString("\n * ", "\n * ", "\n")}")
+    sys.props(org.apache.logging.log4j.util.LoaderUtil.IGNORE_TCCL_PROPERTY) = "true"
     val noJLine = new classpath.FilteredLoader(scriptedSbtInstance.loader, "jline." :: Nil)
     val loader = classpath.ClasspathUtilities.toLoader(scriptedSbtClasspath.files, noJLine)
     val bridgeClass = Class.forName("sbt.internal.inc.IncScriptedRunner", true, loader)
