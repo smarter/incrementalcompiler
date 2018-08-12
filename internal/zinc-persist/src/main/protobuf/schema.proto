@@ -66,6 +66,8 @@ message Position {
     string pointerSpace = 5;
     string sourcePath = 6;
     string sourceFilepath = 7;
+    sint32 startOffset = 8;
+    sint32 endOffset = 9;
 }
 
 message Problem {

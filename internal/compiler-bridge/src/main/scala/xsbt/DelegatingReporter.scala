@@ -10,7 +10,7 @@ package xsbt
 import java.io.File
 import java.util.Optional
 
-import scala.reflect.internal.util.{ FakePos, NoPosition, Position }
+import scala.reflect.internal.util.{ FakePos, NoPosition, Position, RangePosition }
 // Left for compatibility
 import Compat._
 
@@ -24,7 +24,9 @@ private object DelegatingReporter {
                      lineContent0: String,
                      offset0: Option[Int],
                      pointer0: Option[Int],
-                     pointerSpace0: Option[String])
+                     pointerSpace0: Option[String],
+                     startOffset0: Option[Int],
+                     endOffset0: Option[Int])
       extends xsbti.Position {
     val line = o2oi(line0)
     val lineContent = lineContent0
@@ -33,6 +35,8 @@ private object DelegatingReporter {
     val sourceFile = o2jo(sourceFile0)
     val pointer = o2oi(pointer0)
     val pointerSpace = o2jo(pointerSpace0)
+    override val startOffset = o2oi(startOffset0)
+    override val endOffset = o2oi(endOffset0)
     override def toString =
       (sourcePath0, line0) match {
         case (Some(s), Some(l)) => s + ":" + l
@@ -42,7 +46,7 @@ private object DelegatingReporter {
   }
 
   object PositionImpl {
-    def empty: PositionImpl = new PositionImpl(None, None, None, "", None, None, None)
+    def empty: PositionImpl = new PositionImpl(None, None, None, "", None, None, None, None, None)
   }
 
   import java.lang.{ Integer => I }
@@ -81,13 +85,18 @@ private object DelegatingReporter {
         case '\t' => '\t'
         case _    => ' '
       }
+      val isRange = pos.isInstanceOf[RangePosition]
+      val startOffset = if (isRange) Some(pos.start) else None
+      val endOffset = if (isRange) Some(pos.end) else None
       new PositionImpl(Option(sourcePath),
                        Option(sourceFile),
                        Option(line),
                        lineContent,
                        Option(offset),
                        Option(pointer),
-                       Option(pointerSpace.mkString))
+                       Option(pointerSpace.mkString),
+                       startOffset,
+                       endOffset)
     }
 
     cleanPos(dirtyPos) match {

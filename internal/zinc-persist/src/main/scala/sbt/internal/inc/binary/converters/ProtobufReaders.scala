@@ -127,7 +127,9 @@ final class ProtobufReaders(mapper: ReadMapper) {
       pointer0 = fromInt(position.pointer),
       pointerSpace0 = fromString(position.pointerSpace),
       sourcePath0 = fromString(position.sourcePath),
-      sourceFile0 = fromString(position.sourceFilepath).map(fromPathString)
+      sourceFile0 = fromString(position.sourceFilepath).map(fromPathString),
+      startOffset0 = fromInt(position.startOffset),
+      endOffset0 = fromInt(position.endOffset),
     )
   }
 
